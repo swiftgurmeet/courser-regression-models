@@ -3,7 +3,7 @@ title: "Regression Models - Course Project"
 author: "Gurmeet Singh"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 html_document:
-keep_md: yes
+  keep_md: yes
 ---
 
 
@@ -25,22 +25,12 @@ Let's calculate the mean MPG and weight of manual and auto cars:
 manualcars <- mtcars[mtcars$am == 0,]
 autocars <- mtcars[mtcars$am == 1,]
 #Mean MPG/Weight of cars with manual transmission
-mean(manualcars$mpg)
-mean(manualcars$wt)
+mean(manualcars$mpg) ; mean(manualcars$wt)
 #Mean MPG/Weight of cars with automatic transmission
-mean(autocars$mpg)
-mean(autocars$wt)
+mean(autocars$mpg); mean(autocars$wt)
 ```
 
-Clearly, this confirms that the cars with automatic transmission have significantly higher MPG, but they also weigh less on an average.
-
-
-We can quantify the MPG data with a t-test:
-```{r}
-t.test(manualcars$mpg,autocars$mpg,var.equal = T)
-```
-
-The difference is significant with > 95% confidence since the p-value 0.000285 < 0.05.
+Clearly, this confirms that the cars with automatic transmission have significantly higher MPG, but they also weigh less on an average. This is verified by a T-test in the appendix.
 
 Now let's fit a linear model between 'am' as the predictor and 'mpg' as the outcome.
 
@@ -49,19 +39,22 @@ fit <- lm(mpg ~ am,data=mtcars)
 summary(fit)
 ```
 
-We can see that there is a significant relationship between the two (am and mpg) indicated by the '***'. The estimate column confirms the MPG means we computed earlier for cars with manual and automatic transmissions. Also, the p-value for 'am' matches the p-value we obtained earlier with the p-test.
+The 'intercept' and 'am' intercept are respectively, the mean MPG (17.147) of cars with manual and the increase (7.245) in MPG by moving to an automatic transmission. We can see that there is a significant relationship between the two (am and mpg) indicated by the '***'. The estimate column confirms the MPG means we computed earlier for cars with manual and automatic transmissions. 
 
-
-
+The residual plots for the fitted model are in Figure A1 in the appendix. There doesn't seem to be any obvious pattern in the residual plots, but a correlation between residuals and weight of the cars suggests that the model may improve by adding 'wt' as a predictor (See appendix).
 
 The R^2 value indicates that about 33.3% of the variance in MPG is explained by the 'am' variable, so let's fit models with more predictors and use ANOVA to quantify if addition of these predictors improve the model accuracy.
+
 ```{r}
-fit1 <- lm(formula = mpg ~ am, data = mtcars)
-fit2 <- lm(formula = mpg ~ am + wt, data = mtcars)
-fit3 <- lm(formula = mpg ~ am + wt + cyl, data = mtcars)
-fit4 <- lm(formula = mpg ~ am + wt + cyl + hp, data = mtcars)
+fit1 <- lm(formula = mpg ~ wt, data = mtcars)
+fit2 <- lm(formula = mpg ~ wt + am, data = mtcars)
+fit3 <- lm(formula = mpg ~ wt + am + cyl, data = mtcars)
+fit4 <- lm(formula = mpg ~ wt + am + cyl + hp, data = mtcars)
+summary(fit4)
 anova(fit1,fit2,fit3,fit4)
 ```
+
+Both from the summary and anova outputs, we can quantifiably say that 'am' is not a significant predictor of MPG, whereas the 'wt' **is** a significant predictor. In the summary output, the p-value for 'am' is 0.3142 > 0.05 and in the anova output, the Model2 (Pr>F) = 0.985 > 0.05 indicating that adding 'am' to the predictors didn't significantly improve the model prediction.
 
 ## Results
 
@@ -80,7 +73,13 @@ working directory of an R session and running these commands:
 library(knitr)
 knit2html("Project.Rmd")
 ```
+### T-test for comparing mean MPG for cars with auto and manual transmissions
+We can quantify the MPG data with a t-test:
+```{r}
+t.test(manualcars$mpg,autocars$mpg,var.equal = T)
+```
 
+The difference is significant with > 95% confidence since the p-value 0.000285 < 0.05. Also, the p-value for 'am' matches the p-value we obtained earlier with the (mpg ~ am) model.
 
 Plotting the fitted model.
 ```{r}
@@ -89,5 +88,12 @@ plot(fit)
 title("Figure A1",outer=T,line=-1)
 ```
 
-### Notes:
+Plot model residuals against 'wt': significant correlaton shows that residuals may decrease by addition of 'wt' predictor to the model.
+
+```{r}
+cor(resid(fit),mtcars$wt)
+plot(resid(fit),mtcars$wt)
+abline(lm(mtcars$wt ~resid(fit)),col=2)
+```
+
 
